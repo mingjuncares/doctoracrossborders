@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MedBridge Global</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --navy: #0B1F3A; --navy-mid: #1A3357; --teal: #0E7C86; --teal-light: #12A0AC;
+    --accent: #E8F4F6; --red: #C0392B; --amber: #D4800A; --green: #1A7A4A;
+    --white: #FFFFFF; --off-white: #F4F8FA; --line: #D8E6EA; --text: #0B1F3A; --muted: #5C7A8A;
+    --font-serif: 'DM Serif Display', Georgia, serif;
+    --font-sans: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --bottom-nav-h: 68px; --header-h: 56px;
+  }
+  html, body { font-family: var(--font-sans); background: var(--off-white); color: var(--text); line-height: 1.5; height: 100%; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+  .top-header { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: var(--navy); height: var(--header-h); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 34px; height: 34px; background: var(--teal); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
+  .logo-name { font-family: var(--font-serif); font-size: 17px; color: var(--white); display: block; line-height: 1.1; }
+  .logo-sub { font-size: 8px; font-family: var(--font-mono); color: rgba(255,255,255,0.5); letter-spacing: 0.1em; text-transform: uppercase; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .icon-btn { width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.1); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; position: relative; color: white; }
+  .notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: var(--red); border-radius: 50%; border: 2px solid var(--navy); }
+  .status-chip { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 5px 10px; font-size: 10px; font-family: var(--font-mono); color: rgba(255,255,255,0.8); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #2ECC71; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.35} }
+
+  .scroll-area { margin-top: var(--header-h); margin-bottom: var(--bottom-nav-h); min-height: calc(100vh - var(--header-h) - var(--bottom-nav-h)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .page { display: none; padding: 16px 16px 8px; animation: fadeIn 0.25s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  .page-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .page-title { font-family: var(--font-serif); font-size: 24px; color: var(--navy); line-height: 1.1; }
+  .page-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--font-mono); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: var(--font-sans); cursor: pointer; border: none; transition: all 0.15s; white-space: nowrap; }
+  .btn-primary { background: var(--navy); color: var(--white); }
+  .btn-teal { background: var(--teal); color: var(--white); }
+  .btn-ghost { background: var(--white); color: var(--muted); border: 1.5px solid var(--line); }
+  .btn-red { background: var(--red); color: var(--white); }
+  .btn-sm { padding: 7px 12px; font-size: 12px; border-radius: 8px; }
+  .btn-full { width: 100%; }
+
+  .alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 12px; font-size: 13px; margin-bottom: 14px; line-height: 1.4; }
+  .alert-icon { font-size: 16px; flex-shrink: 0; }
+  .alert-red { background: #FDECEA; border-left: 3px solid var(--red); }
+  .alert-amber { background: #FEF3E8; border-left: 3px solid var(--amber); }
+  .alert-blue { background: #EBF3FE; border-left: 3px solid #2563EB; }
+  .alert strong { font-weight: 700; display: block; margin-bottom: 2px; }
+
+  .stats-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; scrollbar-width: none; }
+  .stats-scroll::-webkit-scrollbar { display: none; }
+  .stat-card { background: var(--white); border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px; min-width: 130px; flex-shrink: 0; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--teal); }
+  .stat-card.red::before { background: var(--red); }
+  .stat-card.amber::before { background: var(--amber); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-label { font-size: 9px; font-family: var(--font-mono); letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-family: var(--font-serif); font-size: 30px; color: var(--navy); line-height: 1; }
+  .stat-change { font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .up { color: var(--green); font-weight: 600; }
+  .dn { color: var(--red); font-weight: 600; }
+
+  .card { background: var(--white); border: 1.5px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .card-title span { font-size: 11px; font-weight: 400; color: var(--muted); }
+
+  .activity-item { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .activity-icon { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .activity-body { flex: 1; }
+  .activity-text { font-size: 12.5px; line-height: 1.4; }
+  .activity-text strong { font-weight: 700; }
+  .activity-time { font-size: 10px; font-family: var(--font-mono); color: var(--muted); margin-top: 3px; }
+
+  .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; font-family: var(--font-mono); }
+  .pill::before { content: '●'; font-size: 7px; }
+  .pill-green { background: #E8F5EE; color: var(--green); }
+  .pill-red { background: #FDECEA; color: var(--red); }
+  .pill-amber { background: #FEF3E8; color: var(--amber); }
+  .pill-blue { background: #E8F0FE; color: #2563EB; }
+  .pill-grey { background: #F0F0F0; color: #666; }
+
+  .doctor-card { background: var(--white); border: 1.5px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 14px; }
+  .doctor-avatar { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 22px; color: white; flex-shrink: 0; background: var(--navy); overflow: hidden; }
+  .doctor-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .doctor-info { flex: 1; min-width: 0; }
+  .doctor-name { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+  .doctor-spec { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .doctor-meta-item { font-size: 11.5px; color: var(--muted); margin-bottom: 3px; }
+  .doctor-footer { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+  .deploy-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .deploy-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .deploy-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 16px; color: white; flex-shrink: 0; background: var(--navy); overflow: hidden; }
+  .deploy-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .deploy-info { flex: 1; min-width: 0; }
+  .deploy-name { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .deploy-detail { font-size: 11px; color: var(--muted); }
+
+  .triage-tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .triage-tabs::-webkit-scrollbar { display: none; }
+  .triage-tab { padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; font-family: var(--font-mono); cursor: pointer; border: none; white-space: nowrap; flex-shrink: 0; }
+  .triage-tab.critical { background: #FDECEA; color: var(--red); }
+  .triage-tab.urgent { background: #FEF3E8; color: var(--amber); }
+  .triage-tab.stable { background: #E8F5EE; color: var(--green); }
+  .triage-tab.active { box-shadow: 0 2px 10px rgba(0,0,0,0.12); transform: scale(1.04); }
+  .patient-card { background: var(--white); border: 1.5px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .patient-card.critical { border-left: 4px solid var(--red); }
+  .patient-card.urgent { border-left: 4px solid var(--amber); }
+  .patient-card.stable { border-left: 4px solid var(--green); }
+  .patient-id { font-size: 9px; font-family: var(--font-mono); color: var(--muted); margin-bottom: 4px; }
+  .patient-name { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
+  .patient-info { font-size: 12px; color: var(--muted); }
+  .patient-tags { margin-top: 8px; display: flex; gap: 5px; flex-wrap: wrap; }
+  .tag { font-size: 10px; background: var(--accent); color: var(--teal); padding: 3px 8px; border-radius: 5px; font-family: var(--font-mono); font-weight: 600; }
+
+  .mission-card { background: var(--white); border: 1.5px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .mission-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .mission-title-row { display: flex; align-items: flex-start; flex: 1; margin-right: 10px; }
+  .mission-num { font-family: var(--font-serif); font-size: 22px; color: var(--teal); opacity: 0.5; line-height: 1; margin-right: 10px; flex-shrink: 0; }
+  .mission-title { font-size: 14px; font-weight: 700; color: var(--navy); line-height: 1.3; }
+  .mission-loc { font-size: 11.5px; color: var(--muted); margin: 6px 0 12px; }
+  .mission-stats { display: flex; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
+  .mission-stat { flex: 1; text-align: center; padding: 10px 4px; border-right: 1px solid var(--line); font-size: 10px; color: var(--muted); }
+  .mission-stat:last-child { border-right: none; }
+  .mission-stat strong { display: block; font-family: var(--font-serif); font-size: 18px; color: var(--navy); margin-bottom: 1px; }
+  .progress-bar { height: 5px; background: var(--line); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+  .progress-fill { height: 100%; border-radius: 3px; background: var(--teal); }
+
+  .mission-map { background: var(--navy); border-radius: 14px; height: 180px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+  .mission-map-bg { position: absolute; inset: 0; background: radial-gradient(circle at 20% 55%, rgba(14,124,134,0.35) 0%, transparent 50%), radial-gradient(circle at 75% 35%, rgba(14,124,134,0.25) 0%, transparent 40%); }
+  .mission-map-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 28px 28px; }
+  .map-dot { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--teal-light); box-shadow: 0 0 0 4px rgba(18,160,172,0.25), 0 0 0 8px rgba(18,160,172,0.1); }
+  .map-dot-label { position: absolute; font-size: 8px; font-family: var(--font-mono); color: rgba(255,255,255,0.8); white-space: nowrap; top: -16px; left: 50%; transform: translateX(-50%); }
+  .map-center-label { color: rgba(255,255,255,0.2); font-family: var(--font-serif); font-size: 15px; letter-spacing: 0.12em; position: relative; }
+
+  .form-section-title { font-size: 11px; font-weight: 700; font-family: var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .form-group { margin-bottom: 14px; }
+  label { display: block; font-size: 11px; font-weight: 700; font-family: var(--font-mono); letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  input, select, textarea { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 15px; font-family: var(--font-sans); color: var(--text); background: var(--white); -webkit-appearance: none; outline: none; transition: border 0.15s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14,124,134,0.1); }
+  textarea { min-height: 80px; resize: none; }
+  .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .form-actions .btn { flex: 1; padding: 14px; font-size: 14px; }
+
+  .search-bar { display: flex; align-items: center; gap: 8px; background: var(--white); border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; }
+  .search-bar input { border: none; background: transparent; font-size: 14px; padding: 0; box-shadow: none !important; }
+  .section-label { font-size: 10px; font-family: var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; margin-top: 4px; }
+
+  /* PHOTO UPLOAD */
+  .photo-upload-area {
+    border: 2px dashed var(--line); border-radius: 14px; padding: 20px;
+    text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 14px;
+    background: var(--off-white);
+  }
+  .photo-upload-area:active { border-color: var(--teal); background: var(--accent); }
+  .photo-upload-area input { display: none; }
+  .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto 10px; display: block; border: 3px solid var(--teal); }
+  .photo-placeholder { font-size: 40px; margin-bottom: 8px; }
+  .photo-upload-text { font-size: 13px; color: var(--muted); }
+  .photo-upload-text strong { color: var(--teal); display: block; font-size: 14px; margin-bottom: 2px; }
+
+  /* PROFILE PAGE */
+  .profile-hero { background: var(--navy); margin: -16px -16px 0; padding: 20px 16px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .back-btn { align-self: flex-start; display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; background: none; border: none; cursor: pointer; padding: 0; margin-bottom: 16px; }
+  .profile-avatar-lg { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 36px; color: white; border: 3px solid rgba(255,255,255,0.25); margin-bottom: 12px; overflow: hidden; flex-shrink: 0; }
+  .profile-avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-name { font-family: var(--font-serif); font-size: 22px; color: white; margin-bottom: 4px; }
+  .profile-spec { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
+  .profile-id-badge { font-family: var(--font-mono); font-size: 11px; color: var(--teal-light); background: rgba(18,160,172,0.15); padding: 4px 12px; border-radius: 20px; margin-bottom: 14px; }
+  .profile-actions { display: flex; gap: 10px; width: 100%; }
+  .profile-actions .btn { flex: 1; font-size: 13px; padding: 10px; }
+  .profile-stats { display: flex; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 14px; background: var(--white); }
+  .profile-stat { flex: 1; text-align: center; padding: 14px 4px; border-right: 1px solid var(--line); }
+  .profile-stat:last-child { border-right: none; }
+  .profile-stat strong { display: block; font-family: var(--font-serif); font-size: 22px; color: var(--navy); }
+  .profile-stat span { font-size: 10px; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; }
+  .info-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .info-row:last-child { border-bottom: none; }
+  .info-icon { font-size: 18px; flex-shrink: 0; width: 28px; text-align: center; }
+  .info-label { font-size: 10px; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
+  .info-value { font-size: 14px; color: var(--text); font-weight: 500; }
+
+  /* ── DOCTOR ID CARD ── */
+  .id-card-wrap { padding: 16px; display: flex; flex-direction: column; align-items: center; }
+  .id-card {
+    width: 100%; max-width: 340px;
+    background: linear-gradient(135deg, #0B1F3A 0%, #1A3357 60%, #0E7C86 100%);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(11,31,58,0.35);
+    position: relative;
+  }
+  .id-card-pattern {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 80% 20%, rgba(18,160,172,0.2) 0%, transparent 50%),
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 20px 20px, 20px 20px;
+  }
+  .id-card-header {
+    position: relative;
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .id-card-logo { width: 28px; height: 28px; background: var(--teal); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: white; flex-shrink: 0; }
+  .id-card-org { color: white; }
+  .id-card-org-name { font-family: var(--font-serif); font-size: 13px; line-height: 1.1; }
+  .id-card-org-sub { font-size: 8px; font-family: var(--font-mono); color: rgba(255,255,255,0.5); letter-spacing: 0.1em; text-transform: uppercase; }
+  .id-card-type { margin-left: auto; font-size: 8px; font-family: var(--font-mono); color: var(--teal-light); background: rgba(18,160,172,0.2); padding: 3px 8px; border-radius: 10px; letter-spacing: 0.08em; }
+  .id-card-body { position: relative; display: flex; gap: 14px; padding: 16px; }
+  .id-card-photo-wrap { flex-shrink: 0; }
+  .id-card-photo {
+    width: 80px; height: 95px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-serif); font-size: 32px; color: rgba(255,255,255,0.5);
+  }
+  .id-card-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .id-card-details { flex: 1; min-width: 0; }
+  .id-card-name { font-family: var(--font-serif); font-size: 17px; color: white; line-height: 1.2; margin-bottom: 4px; }
+  .id-card-specialty { font-size: 11px; color: var(--teal-light); font-weight: 600; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-mono); }
+  .id-card-field { margin-bottom: 5px; }
+  .id-card-field-label { font-size: 8px; font-family: var(--font-mono); color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; }
+  .id-card-field-value { font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 500; }
+  .id-card-footer { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); }
+  .id-card-qr { width: 90px; height: 90px; background: white; border-radius: 8px; padding: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .id-card-qr canvas, .id-card-qr img { width: 82px !important; height: 82px !important; }
+  .id-card-bottom-info { flex: 1; }
+  .id-card-id { font-family: var(--font-mono); font-size: 11px; color: var(--teal-light); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 3px; }
+  .id-card-scan-txt { font-size: 9px; color: rgba(255,255,255,0.4); font-family: var(--font-mono); }
+  .id-card-verified { display: flex; align-items: center; gap: 4px; background: rgba(26,122,74,0.3); border: 1px solid rgba(26,122,74,0.5); border-radius: 20px; padding: 3px 8px; font-size: 9px; font-family: var(--font-mono); color: #5EE89A; margin-top: 5px; width: fit-content; }
+
+  /* VERIFY PAGE */
+  .verify-card {
+    background: var(--white); border-radius: 20px; overflow: hidden;
+    box-shadow: 0 8px 30px rgba(11,31,58,0.12); margin: 0 0 16px;
+  }
+  .verify-header { background: linear-gradient(135deg, #0B1F3A, #0E7C86); padding: 20px; text-align: center; }
+  .verify-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(26,122,74,0.3); border: 1px solid rgba(26,122,74,0.6); border-radius: 20px; padding: 5px 14px; font-size: 11px; font-family: var(--font-mono); color: #5EE89A; font-weight: 700; margin-bottom: 14px; }
+  .verify-photo { width: 90px; height: 90px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); margin: 0 auto 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 36px; color: white; background: rgba(255,255,255,0.1); }
+  .verify-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .verify-name { font-family: var(--font-serif); font-size: 22px; color: white; margin-bottom: 4px; }
+  .verify-spec { font-size: 13px; color: rgba(255,255,255,0.6); }
+  .verify-body { padding: 20px; }
+  .verify-id { font-family: var(--font-mono); font-size: 13px; color: var(--teal); font-weight: 700; text-align: center; margin-bottom: 16px; letter-spacing: 0.1em; }
+  .verify-footer { font-size: 10px; color: var(--muted); text-align: center; font-family: var(--font-mono); padding: 12px; border-top: 1px solid var(--line); }
+
+  .loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 30px; color: var(--muted); font-size: 13px; font-family: var(--font-mono); }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--line); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast { position: fixed; bottom: 80px; left: 16px; right: 16px; z-index: 999; background: var(--navy); color: white; padding: 14px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; text-align: center; transform: translateY(20px); opacity: 0; transition: all 0.3s; pointer-events: none; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--bottom-nav-h); background: var(--white); border-top: 1.5px solid var(--line); display: flex; z-index: 200; box-shadow: 0 -4px 20px rgba(11,31,58,0.08); }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; border: none; background: transparent; padding: 8px 4px; position: relative; }
+  .nav-item .nav-icon { font-size: 22px; line-height: 1; }
+  .nav-item .nav-label { font-size: 9.5px; font-weight: 600; color: var(--muted); font-family: var(--font-sans); }
+  .nav-item.active .nav-label { color: var(--teal); }
+  .nav-item.active::after { content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 2.5px; background: var(--teal); border-radius: 0 0 3px 3px; }
+  .nav-badge { position: absolute; top: 6px; right: calc(50% - 16px); background: var(--red); color: white; font-size: 8px; font-family: var(--font-mono); font-weight: 700; padding: 1px 5px; border-radius: 10px; min-width: 16px; text-align: center; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<script>
+  const SUPABASE_URL = 'https://eyjvfwxkmehntgpgadtz.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5anZmd3hrbWVobnRncGdhZHR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MTk1OTksImV4cCI6MjA5MzA5NTU5OX0.sHmChByDBGikXswbcdfvMj-OcUFGxxU1nnZzyRXNv8c';
+
+  let photoBase64 = null;
+
+  async function sbFetch(path, options = {}) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': options.prefer || 'return=representation', ...options.headers },
+      ...options
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Request failed'); }
+    const text = await res.text();
+    return text ? JSON.parse(text) : [];
+  }
+
+  function generateDoctorId() {
+    return `MBG-DR-2026-${Math.floor(Math.random()*9000)+1000}`;
+  }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = `toast ${type} show`;
+    setTimeout(() => t.className = 'toast', 3500);
+  }
+
+  function showPage(id, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + id)?.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (el && el.classList && el.classList.contains('nav-item')) {
+      el.classList.add('active');
+    } else {
+      document.querySelectorAll('.nav-item').forEach(n => {
+        if (n.getAttribute('onclick')?.includes("'" + id + "'")) n.classList.add('active');
+      });
+    }
+    document.querySelector('.scroll-area').scrollTop = 0;
+    if (id === 'doctors') loadDoctors();
+    if (id === 'triage') loadPatients();
+  }
+
+  function filterTriage(type, btn) {
+    document.querySelectorAll('.triage-section').forEach(s => s.style.display = 'none');
+    document.getElementById('triage-' + type).style.display = 'block';
+    document.querySelectorAll('.triage-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // ── PHOTO UPLOAD ──
+  function handlePhotoUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      photoBase64 = e.target.result;
+      const preview = document.getElementById('photo-preview');
+      preview.innerHTML = `<img src="${photoBase64}" class="photo-preview">`;
+      document.getElementById('photo-upload-text').innerHTML = '<strong style="color:var(--green);">✅ Photo ready</strong>Tap to change';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── LOAD DOCTORS ──
+  async function loadDoctors() {
+    const container = document.getElementById('doctors-list');
+    container.innerHTML = '<div class="loading"><div class="spinner"></div> Loading doctors…</div>';
+    try {
+      const doctors = await sbFetch('doctors?order=created_at.desc');
+      if (doctors.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">👨‍⚕️</div><p>No doctors registered yet.<br>Tap Register to add the first one.</p></div>';
+        return;
+      }
+      container.innerHTML = doctors.map(d => `
+        <div class="doctor-card">
+          <div class="doctor-avatar">
+            ${d.photo ? `<img src="${d.photo}" alt="${d.full_name}">` : (d.full_name?.charAt(0) || '?')}
+          </div>
+          <div class="doctor-info">
+            <div class="doctor-name">${d.full_name || '—'}</div>
+            <div class="doctor-spec">${d.specialty || '—'}</div>
+            <div class="doctor-meta-item">🪪 ${d.doctor_id || '—'}</div>
+            <div class="doctor-meta-item">📞 ${d.phone || '—'}</div>
+            <div class="doctor-meta-item">🌍 ${d.base_city || '—'}</div>
+            <div class="doctor-footer">
+              <span class="pill ${statusPill(d.status)}">${d.status || 'Pending'}</span>
+              <button class="btn btn-ghost btn-sm" onclick="viewDoctorProfile('${d.id}')">Profile →</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } catch(e) {
+      container.innerHTML = `<div class="alert alert-red"><span class="alert-icon">⚠️</span><div>${e.message}</div></div>`;
+    }
+  }
+
+  function statusPill(s) {
+    return { 'Active':'pill-green','Pending':'pill-amber','Available':'pill-grey','In Transit':'pill-amber','Clearing':'pill-blue' }[s] || 'pill-grey';
+  }
+
+  // ── VIEW DOCTOR PROFILE + ID CARD ──
+  async function viewDoctorProfile(id) {
+    showPage('profile');
+    const container = document.getElementById('profile-content');
+    container.innerHTML = '<div class="loading"><div class="spinner"></div> Loading profile…</div>';
+    try {
+      const [d] = await sbFetch(`doctors?id=eq.${id}`);
+      if (!d) throw new Error('Doctor not found');
+      const verifyUrl = `https://mingjuncares.github.io/doctoracrossborders?verify=${d.doctor_id}`;
+      const photoHTML = d.photo ? `<img src="${d.photo}" alt="${d.full_name}">` : (d.full_name?.charAt(0) || '?');
+
+      container.innerHTML = `
+        <div class="profile-hero">
+          <button class="back-btn" onclick="showPage('doctors')">← Back</button>
+          <div class="profile-avatar-lg">${photoHTML}</div>
+          <div class="profile-name">${d.full_name}</div>
+          <div class="profile-spec">${d.specialty} · ${d.years_experience || '?'} yrs</div>
+          <div class="profile-id-badge">${d.doctor_id}</div>
+          <div style="margin-bottom:14px;"><span class="pill ${statusPill(d.status)}">${d.status || 'Pending'}</span></div>
+          <div class="profile-actions">
+            <a href="https://wa.me/${(d.phone||'').replace(/\D/g,'')}" class="btn btn-teal">💬 WhatsApp</a>
+            <a href="tel:${d.phone||''}" class="btn btn-ghost" style="color:white;border-color:rgba(255,255,255,0.3);">📞 Call</a>
+          </div>
+        </div>
+        <div style="padding:16px;">
+          <div class="profile-stats">
+            <div class="profile-stat"><strong>${d.years_experience||'?'}</strong><span>Yrs Exp</span></div>
+            <div class="profile-stat"><strong>${(d.languages||'').split(',').length}</strong><span>Languages</span></div>
+            <div class="profile-stat"><strong>✅</strong><span>Verified</span></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Details</div>
+            <div class="info-row"><div class="info-icon">🏥</div><div><div class="info-label">Specialty</div><div class="info-value">${d.specialty||'—'}</div></div></div>
+            <div class="info-row"><div class="info-icon">📋</div><div><div class="info-label">License</div><div class="info-value">${d.license_number||'—'}</div></div></div>
+            <div class="info-row"><div class="info-icon">🎓</div><div><div class="info-label">Medical School</div><div class="info-value">${d.medical_school||'—'}</div></div></div>
+            <div class="info-row"><div class="info-icon">🌍</div><div><div class="info-label">Base City</div><div class="info-value">${d.base_city||'—'}</div></div></div>
+            <div class="info-row"><div class="info-icon">🗣</div><div><div class="info-label">Languages</div><div class="info-value">${d.languages||'—'}</div></div></div>
+            <div class="info-row"><div class="info-icon">📧</div><div><div class="info-label">Email</div><div class="info-value">${d.email||'—'}</div></div></div>
+          </div>
+
+          <!-- ID CARD -->
+          <div class="card-title" style="margin-bottom:12px;">🪪 Official ID Card</div>
+          <div class="id-card">
+            <div class="id-card-pattern"></div>
+            <div class="id-card-header">
+              <div class="id-card-logo"><img src="data:image/jpeg;base64,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" style="width:28px;height:28px;border-radius:7px;object-fit:cover;"></div>
+              <div class="id-card-org">
+                <div class="id-card-org-name">MedBridge Global</div>
+                <div class="id-card-org-sub">Humanitarian Medical Corps</div>
+              </div>
+              <div class="id-card-type">PHYSICIAN ID</div>
+            </div>
+            <div class="id-card-body">
+              <div class="id-card-photo-wrap">
+                <div class="id-card-photo">
+                  ${d.photo ? `<img src="${d.photo}" alt="${d.full_name}">` : (d.full_name?.charAt(0)||'?')}
+                </div>
+              </div>
+              <div class="id-card-details">
+                <div class="id-card-name">${d.full_name}</div>
+                <div class="id-card-specialty">${d.specialty}</div>
+                <div class="id-card-field"><div class="id-card-field-label">License No.</div><div class="id-card-field-value">${d.license_number||'—'}</div></div>
+                <div class="id-card-field"><div class="id-card-field-label">Nationality</div><div class="id-card-field-value">${d.issuing_country||'—'}</div></div>
+                <div class="id-card-field"><div class="id-card-field-label">Languages</div><div class="id-card-field-value">${d.languages||'—'}</div></div>
+                <div class="id-card-field"><div class="id-card-field-label">Base City</div><div class="id-card-field-value">${d.base_city||'—'}</div></div>
+              </div>
+            </div>
+            <div class="id-card-footer">
+              <div class="id-card-qr" id="idcard-qr-${d.id}"></div>
+              <div class="id-card-bottom-info">
+                <div class="id-card-id">${d.doctor_id}</div>
+                <div class="id-card-scan-txt">Scan to verify credentials</div>
+                <div class="id-card-verified">✅ VERIFIED PHYSICIAN</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;font-family:var(--font-mono);">Show this card to patients, hospitals & checkpoints</div>
+        </div>
+      `;
+
+      // Generate QR on ID card
+      setTimeout(() => {
+        new QRCode(document.getElementById(`idcard-qr-${d.id}`), {
+          text: verifyUrl, width: 56, height: 56,
+          colorDark: '#0B1F3A', colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      }, 150);
+
+    } catch(e) {
+      container.innerHTML = `<div style="padding:16px;"><div class="alert alert-red"><span>⚠️</span><div>${e.message}</div></div></div>`;
+    }
+  }
+
+  // ── REGISTER DOCTOR ──
+  async function registerDoctor() {
+    const btn = document.getElementById('register-btn');
+    btn.textContent = 'Submitting…'; btn.disabled = true;
+    try {
+      const data = {
+        doctor_id: generateDoctorId(),
+        full_name: document.getElementById('r-name').value,
+        specialty: document.getElementById('r-specialty').value,
+        license_number: document.getElementById('r-license').value,
+        issuing_country: document.getElementById('r-country').value,
+        years_experience: parseInt(document.getElementById('r-exp').value) || null,
+        languages: document.getElementById('r-languages').value,
+        medical_school: document.getElementById('r-school').value,
+        email: document.getElementById('r-email').value,
+        phone: document.getElementById('r-phone').value,
+        base_city: document.getElementById('r-city').value,
+        preferred_region: document.getElementById('r-region').value,
+        max_duration: document.getElementById('r-duration').value,
+        status: 'Pending',
+        photo: photoBase64 || null
+      };
+      if (!data.full_name || !data.email || !data.specialty) {
+        showToast('Please fill in name, email and specialty', 'error');
+        btn.textContent = 'Submit →'; btn.disabled = false; return;
+      }
+      await sbFetch('doctors', { method: 'POST', body: JSON.stringify(data) });
+      showToast(`✅ ${data.full_name} registered! ID: ${data.doctor_id}`, 'success');
+      document.getElementById('register-form').reset();
+      document.getElementById('photo-preview').innerHTML = '';
+      document.getElementById('photo-upload-text').innerHTML = '<strong>Tap to upload photo</strong>JPG or PNG · Max 2MB';
+      photoBase64 = null;
+    } catch(e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+    btn.textContent = 'Submit →'; btn.disabled = false;
+  }
+
+  // ── LOAD PATIENTS ──
+  async function loadPatients() {
+    ['critical','urgent','stable'].forEach(async (level) => {
+      const container = document.getElementById('triage-' + level);
+      container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      try {
+        const patients = await sbFetch(`patients?triage_level=eq.${level}&order=created_at.desc`);
+        if (patients.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon">🏥</div><p>No ${level} patients.</p></div>`;
+          return;
+        }
+        container.innerHTML = patients.map(p => `
+          <div class="patient-card ${level}">
+            <div class="patient-id">${p.patient_id}</div>
+            <div class="patient-name">${p.full_name} · ${p.age||'?'}${p.gender?.charAt(0)||''}</div>
+            <div class="patient-info">${p.condition||'—'}</div>
+            <div class="patient-tags"><span class="tag">${p.triage_level}</span>${p.assigned_doctor?`<span class="tag">Dr. ${p.assigned_doctor}</span>`:''}</div>
+          </div>
+        `).join('');
+      } catch(e) {
+        container.innerHTML = `<div class="alert alert-red"><span>⚠️</span><div>${e.message}</div></div>`;
+      }
+    });
+  }
+
+  // ── ADD PATIENT ──
+  async function addPatient() {
+    const btn = document.getElementById('patient-btn');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    try {
+      const data = {
+        patient_id: `MBG-PT-2026-${Math.floor(Math.random()*9000)+1000}`,
+        full_name: document.getElementById('p-name').value,
+        age: parseInt(document.getElementById('p-age').value) || null,
+        gender: document.getElementById('p-gender').value,
+        condition: document.getElementById('p-condition').value,
+        triage_level: document.getElementById('p-triage').value,
+        assigned_doctor: document.getElementById('p-doctor').value,
+        notes: document.getElementById('p-notes').value,
+      };
+      if (!data.full_name || !data.condition) { showToast('Fill in name and condition', 'error'); btn.textContent='Save Patient'; btn.disabled=false; return; }
+      await sbFetch('patients', { method: 'POST', body: JSON.stringify(data) });
+      showToast('✅ Patient added!', 'success');
+      document.getElementById('patient-form').reset();
+      document.getElementById('new-patient-form').style.display = 'none';
+      loadPatients();
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+    btn.textContent = 'Save Patient'; btn.disabled = false;
+  }
+
+  // ── VERIFY (QR scan landing) ──
+  async function checkVerifyMode() {
+    const params = new URLSearchParams(window.location.search);
+    const doctorId = params.get('verify');
+    if (!doctorId) return;
+    // Hide nav & header for clean verify view
+    document.querySelector('.bottom-nav').style.display = 'none';
+    showPage('verify');
+    const container = document.getElementById('verify-content');
+    container.innerHTML = '<div class="loading"><div class="spinner"></div> Verifying…</div>';
+    try {
+      const [d] = await sbFetch(`doctors?doctor_id=eq.${doctorId}`);
+      if (!d) throw new Error('Doctor not found in registry');
+      const photoHTML = d.photo ? `<img src="${d.photo}" alt="${d.full_name}">` : (d.full_name?.charAt(0)||'?');
+      container.innerHTML = `
+        <div class="verify-card">
+          <div class="verify-header">
+            <div class="verify-badge">✅ VERIFIED PHYSICIAN</div>
+            <div class="verify-photo">${photoHTML}</div>
+            <div class="verify-name">${d.full_name}</div>
+            <div class="verify-spec">${d.specialty}</div>
+          </div>
+          <div class="verify-body">
+            <div class="verify-id">${d.doctor_id}</div>
+            <div class="info-row"><div class="info-icon">📋</div><div><div class="info-label">License</div><div class="info-value">${d.license_number||'—'}</div></div></div>
+            <div class="info-row"><div class="info-icon">🏥</div><div><div class="info-label">Specialty</div><div class="info-value">${d.specialty||'—'}</div></div></div>
+            <div class="info-row"><div class="info-icon">🎓</div><div><div class="info-label">Medical School</div><div class="info-value">${d.medical_school||'—'}</div></div></div>
+            <div class="info-row"><div class="info-icon">🗣</div><div><div class="info-label">Languages</div><div class="info-value">${d.languages||'—'}</div></div></div>
+            <div class="info-row"><div class="info-icon">🌍</div><div><div class="info-label">Base City</div><div class="info-value">${d.base_city||'—'}</div></div></div>
+            <div class="info-row"><div class="info-icon">🏳️</div><div><div class="info-label">Country of License</div><div class="info-value">${d.issuing_country||'—'}</div></div></div>
+          </div>
+          <div class="verify-footer">Verified by MedBridge Global Humanitarian Registry<br>${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
+        </div>
+      `;
+    } catch(e) {
+      container.innerHTML = `<div style="text-align:center;padding:40px 16px;"><div style="font-size:48px;margin-bottom:12px;">❌</div><div style="font-size:16px;font-weight:700;color:var(--red);">Not Verified</div><div style="font-size:13px;color:var(--muted);margin-top:8px;">${e.message}</div></div>`;
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', checkVerifyMode);
+</script>
+
+<div class="toast" id="toast"></div>
+
+<!-- TOP HEADER -->
+<div class="top-header">
+  <div class="logo">
+    <div class="logo-mark"><img src="data:image/jpeg;base64,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" style="width:34px;height:34px;border-radius:9px;object-fit:cover;"></div>
+    <div class="logo-text"><span class="logo-name">MedBridge Global</span><span class="logo-sub">Humanitarian Portal</span></div>
+  </div>
+  <div class="header-right">
+    <div class="status-chip"><span class="status-dot"></span>LIVE</div>
+    <button class="icon-btn">🔔<span class="notif-dot"></span></button>
+  </div>
+</div>
+
+<div class="scroll-area">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-bar">
+      <div><div class="page-title">Dashboard</div><div class="page-sub">APR 30, 2026 · UTC</div></div>
+      <button class="btn btn-teal btn-sm">⟳ Sync</button>
+    </div>
+    <div class="alert alert-red"><span class="alert-icon">🚨</span><div><strong>Critical Alert</strong> Port-au-Prince needs emergency surgical reinforcement.</div></div>
+    <div class="section-label">Global Stats</div>
+    <div class="stats-scroll">
+      <div class="stat-card"><div class="stat-label">Physicians</div><div class="stat-value">142</div><div class="stat-change"><span class="up">↑8</span> this week</div></div>
+      <div class="stat-card amber"><div class="stat-label">Missions</div><div class="stat-value">7</div><div class="stat-change">5 countries</div></div>
+      <div class="stat-card red"><div class="stat-label">Critical</div><div class="stat-value">12</div><div class="stat-change"><span class="dn">↑4</span> last 6h</div></div>
+      <div class="stat-card green"><div class="stat-label">Recovered</div><div class="stat-value">2,841</div><div class="stat-change"><span class="up">↑12%</span> 30d</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Active Deployments <span>7 missions live</span></div>
+      <div class="mission-map">
+        <div class="mission-map-bg"></div><div class="mission-map-grid"></div>
+        <div class="map-dot" style="left:18%;top:58%;"><div class="map-dot-label">Haiti</div></div>
+        <div class="map-dot" style="left:47%;top:38%;"><div class="map-dot-label">Sudan</div></div>
+        <div class="map-dot" style="left:52%;top:48%;"><div class="map-dot-label">Yemen</div></div>
+        <div class="map-dot" style="left:54%;top:62%;"><div class="map-dot-label">DRC</div></div>
+        <div class="map-dot" style="left:60%;top:40%;"><div class="map-dot-label">Syria</div></div>
+        <div class="map-dot" style="left:68%;top:56%;"><div class="map-dot-label">Bangladesh</div></div>
+        <div class="map-dot" style="left:76%;top:50%;"><div class="map-dot-label">Myanmar</div></div>
+        <div class="map-center-label">GLOBAL DEPLOYMENT MAP</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Live Activity <span>Last 2 hours</span></div>
+      <div class="activity-item"><div class="activity-icon">🩺</div><div class="activity-body"><div class="activity-text"><strong>Dr. Chen</strong> completed triage — 4 patients stabilized.</div><div class="activity-time">14 MIN AGO · HAI-2026-004</div></div></div>
+      <div class="activity-item"><div class="activity-icon">✈️</div><div class="activity-body"><div class="activity-text"><strong>Team Alpha</strong> departed Miami → Khartoum.</div><div class="activity-time">41 MIN AGO · SDN-2026-002</div></div></div>
+      <div class="activity-item"><div class="activity-icon">🚨</div><div class="activity-body"><div class="activity-text"><strong>Emergency Request</strong> — surgical unit needed, Aden.</div><div class="activity-time">1H 2MIN AGO · YEM-2026-001</div></div></div>
+      <div class="activity-item"><div class="activity-icon">✅</div><div class="activity-body"><div class="activity-text"><strong>Dr. Okonkwo</strong> registered and cleared — Kinshasa.</div><div class="activity-time">1H 38MIN AGO · DRC-2026-007</div></div></div>
+    </div>
+  </div>
+
+  <!-- DOCTORS -->
+  <div class="page" id="page-doctors">
+    <div class="page-bar">
+      <div><div class="page-title">Physicians</div><div class="page-sub">LIVE FROM DATABASE</div></div>
+      <button class="btn btn-primary btn-sm" onclick="showPage('register')">+ New</button>
+    </div>
+    <div class="search-bar"><span>🔍</span><input type="search" placeholder="Search name, specialty…" oninput="searchDoctors(this.value)"></div>
+    <div id="doctors-list"><div class="loading"><div class="spinner"></div> Loading…</div></div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="page" id="page-profile">
+    <div id="profile-content"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- VERIFY -->
+  <div class="page" id="page-verify">
+    <div class="page-bar"><div><div class="page-title">Verification</div><div class="page-sub">MEDBRIDGE GLOBAL REGISTRY</div></div></div>
+    <div id="verify-content"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- TRIAGE -->
+  <div class="page" id="page-triage">
+    <div class="page-bar">
+      <div><div class="page-title">Triage Board</div><div class="page-sub">LIVE · REAL-TIME</div></div>
+      <button class="btn btn-red btn-sm" onclick="document.getElementById('new-patient-form').style.display='block';document.querySelector('.scroll-area').scrollTop=9999;">+ Intake</button>
+    </div>
+    <div class="alert alert-amber"><span class="alert-icon">⚠️</span><div><strong>Capacity Warning</strong> Field hospital at 87% capacity.</div></div>
+    <div class="triage-tabs">
+      <button class="triage-tab critical active" onclick="filterTriage('critical',this)">🔴 Critical</button>
+      <button class="triage-tab urgent" onclick="filterTriage('urgent',this)">🟠 Urgent</button>
+      <button class="triage-tab stable" onclick="filterTriage('stable',this)">🟢 Stable</button>
+    </div>
+    <div id="triage-critical" class="triage-section"></div>
+    <div id="triage-urgent" class="triage-section" style="display:none;"></div>
+    <div id="triage-stable" class="triage-section" style="display:none;"></div>
+    <div id="new-patient-form" style="display:none;" class="card">
+      <div class="card-title">New Patient Intake</div>
+      <form id="patient-form">
+        <div class="form-group"><label>Full Name</label><input id="p-name" type="text" placeholder="Patient name"></div>
+        <div class="form-group"><label>Age</label><input id="p-age" type="number" placeholder="Age" inputmode="numeric"></div>
+        <div class="form-group"><label>Gender</label><select id="p-gender"><option value="">Select…</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+        <div class="form-group"><label>Condition</label><textarea id="p-condition" placeholder="Describe condition…"></textarea></div>
+        <div class="form-group"><label>Triage Level</label><select id="p-triage"><option value="critical">Critical</option><option value="urgent">Urgent</option><option value="stable">Stable</option></select></div>
+        <div class="form-group"><label>Assigned Doctor</label><input id="p-doctor" type="text" placeholder="Doctor name"></div>
+        <div class="form-group"><label>Notes</label><textarea id="p-notes" placeholder="Additional notes…"></textarea></div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" onclick="document.getElementById('new-patient-form').style.display='none'">Cancel</button>
+          <button type="button" class="btn btn-red" id="patient-btn" onclick="addPatient()">Save Patient</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MISSIONS -->
+  <div class="page" id="page-missions">
+    <div class="page-bar"><div><div class="page-title">Missions</div><div class="page-sub">7 ACTIVE · 5 COUNTRIES</div></div><button class="btn btn-primary btn-sm">+ New</button></div>
+    <div class="mission-card">
+      <div class="mission-header"><div class="mission-title-row"><div class="mission-num">01</div><div class="mission-title">Operation Hope — Port-au-Prince</div></div><span class="pill pill-red">Critical</span></div>
+      <div class="mission-loc">🇭🇹 Haiti · Mar 12, 2026</div>
+      <div class="mission-stats"><div class="mission-stat"><strong>28</strong>Physicians</div><div class="mission-stat"><strong>1,240</strong>Patients</div><div class="mission-stat"><strong>87%</strong>Capacity</div><div class="mission-stat"><strong>46d</strong>Active</div></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:87%;background:var(--red);"></div></div>
+      <button class="btn btn-ghost btn-full">Manage →</button>
+    </div>
+    <div class="mission-card">
+      <div class="mission-header"><div class="mission-title-row"><div class="mission-num">02</div><div class="mission-title">Project Sahel — Khartoum</div></div><span class="pill pill-amber">Urgent</span></div>
+      <div class="mission-loc">🇸🇩 Sudan · Feb 28, 2026</div>
+      <div class="mission-stats"><div class="mission-stat"><strong>34</strong>Physicians</div><div class="mission-stat"><strong>3,891</strong>Patients</div><div class="mission-stat"><strong>62%</strong>Capacity</div><div class="mission-stat"><strong>57d</strong>Active</div></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:62%;background:var(--amber);"></div></div>
+      <button class="btn btn-ghost btn-full">Manage →</button>
+    </div>
+    <div class="mission-card">
+      <div class="mission-header"><div class="mission-title-row"><div class="mission-num">03</div><div class="mission-title">Wings of Mercy — Aden</div></div><span class="pill pill-green">Stable</span></div>
+      <div class="mission-loc">🇾🇪 Yemen · Jan 15, 2026</div>
+      <div class="mission-stats"><div class="mission-stat"><strong>19</strong>Physicians</div><div class="mission-stat"><strong>2,104</strong>Patients</div><div class="mission-stat"><strong>45%</strong>Capacity</div><div class="mission-stat"><strong>101d</strong>Active</div></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:45%;"></div></div>
+      <button class="btn btn-ghost btn-full">Manage →</button>
+    </div>
+  </div>
+
+  <!-- REGISTER -->
+  <div class="page" id="page-register">
+    <div class="page-bar"><div><div class="page-title">Register Doctor</div><div class="page-sub">SAVED TO LIVE DATABASE</div></div></div>
+    <div class="alert alert-blue"><span class="alert-icon">ℹ️</span><div>Doctor gets a unique ID + QR ID Card upon registration.</div></div>
+    <form id="register-form">
+      <div class="card">
+        <div class="form-section-title">Doctor Photo</div>
+        <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+          <input type="file" id="photo-input" accept="image/*" onchange="handlePhotoUpload(this)">
+          <div id="photo-preview"></div>
+          <div class="photo-placeholder" id="photo-icon">📷</div>
+          <div class="photo-upload-text" id="photo-upload-text"><strong>Tap to upload photo</strong>JPG or PNG · Max 2MB</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="form-section-title">Personal Information</div>
+        <div class="form-group"><label>Full Name</label><input id="r-name" type="text" placeholder="e.g. Dr. Ronald Ming-Jun"></div>
+        <div class="form-group"><label>Email</label><input id="r-email" type="email" placeholder="doctor@example.com"></div>
+        <div class="form-group"><label>WhatsApp / Phone</label><input id="r-phone" type="tel" placeholder="+1 (305) 000-0000"></div>
+      </div>
+      <div class="card">
+        <div class="form-section-title">Medical Credentials</div>
+        <div class="form-group"><label>Primary Specialty</label><select id="r-specialty"><option value="">Select…</option><option>Emergency Medicine</option><option>General Surgery</option><option>Pediatrics</option><option>Obstetrics & Gynecology</option><option>Anesthesiology</option><option>Internal Medicine</option><option>Infectious Disease</option><option>Orthopedic Surgery</option><option>Psychiatry</option></select></div>
+        <div class="form-group"><label>License Number</label><input id="r-license" type="text" placeholder="e.g. FL-MD-2010-00421"></div>
+        <div class="form-group"><label>Issuing Country</label><select id="r-country"><option>United States</option><option>Brazil</option><option>Germany</option><option>United Kingdom</option><option>Ghana</option><option>Nigeria</option><option>Japan</option><option>Other</option></select></div>
+        <div class="form-group"><label>Years of Experience</label><input id="r-exp" type="number" placeholder="e.g. 14" inputmode="numeric"></div>
+        <div class="form-group"><label>Languages Spoken</label><input id="r-languages" type="text" placeholder="English, Portuguese…"></div>
+        <div class="form-group"><label>Medical School</label><input id="r-school" type="text" placeholder="e.g. University of Miami"></div>
+      </div>
+      <div class="card">
+        <div class="form-section-title">Deployment Preferences</div>
+        <div class="form-group"><label>Base City</label><input id="r-city" type="text" placeholder="e.g. Miami, FL, USA"></div>
+        <div class="form-group"><label>Preferred Region</label><select id="r-region"><option>No preference</option><option>Sub-Saharan Africa</option><option>Middle East</option><option>Latin America & Caribbean</option><option>Southeast Asia</option></select></div>
+        <div class="form-group"><label>Max Mission Duration</label><select id="r-duration"><option>2 weeks</option><option>1 month</option><option>3 months</option><option>6 months</option><option>Open-ended</option></select></div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" onclick="document.getElementById('register-form').reset();photoBase64=null;">Clear</button>
+          <button type="button" class="btn btn-primary" id="register-btn" onclick="registerDoctor()">Submit →</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">⊞</span><span class="nav-label">Dashboard</span></button>
+  <button class="nav-item" onclick="showPage('doctors',this)"><span class="nav-icon">👨‍⚕️</span><span class="nav-label">Doctors</span></button>
+  <button class="nav-item" onclick="showPage('triage',this)"><span class="nav-icon">🏥</span><span class="nav-label">Triage</span><span class="nav-badge">!</span></button>
+  <button class="nav-item" onclick="showPage('missions',this)"><span class="nav-icon">🌍</span><span class="nav-label">Missions</span></button>
+  <button class="nav-item" onclick="showPage('register',this)"><span class="nav-icon">✚</span><span class="nav-label">Register</span></button>
+</nav>
+
+<script>
+  function searchDoctors(q) {
+    document.querySelectorAll('#doctors-list .doctor-card').forEach(c => {
+      c.style.display = c.textContent.toLowerCase().includes(q.toLowerCase()) ? 'flex' : 'none';
+    });
+  }
+  // Add photo column if needed
+  async function addPhotoColumn() {
+    try { await sbFetch('doctors?limit=1'); } catch(e) {}
+  }
+</script>
+</body>
+</html>
